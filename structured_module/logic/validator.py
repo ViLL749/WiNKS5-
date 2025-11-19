@@ -12,7 +12,7 @@ def validate_task(payload: dict):
         sd = datetime.strptime(s, "%Y-%m-%d")
         ed = datetime.strptime(e, "%Y-%m-%d")
     except Exception:
-        return False, "Неверный формат дат. Используйте yyyy-MM-dd."
+        return False, "Неверный формат дат. Используйте dd.mm.yyyy ."
 
     if ed < sd:
         return False, "Дата окончания раньше даты начала."

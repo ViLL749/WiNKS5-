@@ -75,7 +75,7 @@ def draw_timeline(scene, tasks, step_days, viewport_w):
     selected_tasks = ongoing_tasks[:5]
     if len(selected_tasks) < 5:
         needed = 5 - len(selected_tasks)
-        selected_tasks += past_tasks[:neede
+        selected_tasks += past_tasks[:needed]
     # Делаем реверс для визуализации сверху вниз
     selected_tasks = list(reversed(selected_tasks))
 
