@@ -11,11 +11,11 @@ class TaskEditorWidget(QtWidgets.QWidget):
 
         vbox = QtWidgets.QVBoxLayout(self)
 
-        # Switch button
+        # Переключатель режимов
         self.btnSwitch = QtWidgets.QPushButton("Переключить на диаграмму")
         vbox.addWidget(self.btnSwitch)
 
-        # Goal
+        # Цель
         self.goal_input = QtWidgets.QLineEdit()
         self.goal_input.setPlaceholderText("Название цели")
         vbox.addWidget(self.goal_input)
@@ -56,8 +56,8 @@ class TaskEditorWidget(QtWidgets.QWidget):
 
         self.start_date = QtWidgets.QDateEdit(calendarPopup=True)
         self.end_date = QtWidgets.QDateEdit(calendarPopup=True)
-        self.start_date.setDisplayFormat("yyyy-MM-dd")
-        self.end_date.setDisplayFormat("yyyy-MM-dd")
+        self.start_date.setDisplayFormat("dd.MM.yyyy")
+        self.end_date.setDisplayFormat("dd.MM.yyyy")
 
         dbox.addWidget(QtWidgets.QLabel("Начало:"))
         dbox.addWidget(self.start_date)
@@ -67,7 +67,6 @@ class TaskEditorWidget(QtWidgets.QWidget):
 
         vbox.addLayout(dbox)
 
-        # Buttons
         row = QtWidgets.QHBoxLayout()
         self.btnSave = QtWidgets.QPushButton("Сохранить")
         self.btnDel = QtWidgets.QPushButton("Удалить")
@@ -86,12 +85,10 @@ class TaskEditorWidget(QtWidgets.QWidget):
         )
         self.btnNew.clicked.connect(self._emit_new)
 
-        # Default dates
         d = QtCore.QDate.currentDate()
         self.start_date.setDate(d)
         self.end_date.setDate(d)
 
-    # --- internal ---
 
     def _emit_save(self):
         payload = dict(
@@ -110,7 +107,6 @@ class TaskEditorWidget(QtWidgets.QWidget):
         self.clear_form()
         self.sigNew.emit()
 
-    # --- external API for main_window ---
 
     def set_task(self, row: dict):
         self._current_id = row["id"]

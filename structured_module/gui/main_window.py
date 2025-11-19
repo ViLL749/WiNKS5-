@@ -194,14 +194,10 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
             self._reload_list()
 
     def _on_new_task(self):
-        # Форма уже очищается в TaskEditorWidget._emit_new, пофиксить
-        # можно оставить этот вызов, он не мешает
         self.editor.clear_form()
 
-        # Снять визуальное выделение задачи в списке
         self.task_list.clearSelection()
         self.task_list.setCurrentItem(None)
-
 
 
     # Режим диаграммы

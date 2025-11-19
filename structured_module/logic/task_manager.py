@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS tasks(
     m_text TEXT,
     a_text TEXT,
     r_text TEXT,
-    start_date TEXT,
-    end_date TEXT
+    start_date DATE,
+    end_date DATE
 );
 """
 
