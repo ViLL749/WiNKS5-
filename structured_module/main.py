@@ -14,4 +14,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    # app.setFont(QtGui.QFont("Arial"))
+    w = SmartPlannerMainWindow()
+    w.show()
+    sys.exit(app.exec_())
+

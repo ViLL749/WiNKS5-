@@ -16,11 +16,10 @@ class SmartPlanner(QtWidgets.QMainWindow):
         self.zoom_index = 2  # по умолчанию 14 дней/деление
         self.current_task_id = None
 
-        # ===== База данных =====
+        # База данных
         self.conn = sqlite3.connect(DB_FILE)
-        self.create_fresh_schema()  # создаёт таблицу, если её нет
-
-        # ===== UI =====
+        self.create_fresh_schema()
+        # UI
         main = QtWidgets.QWidget()
         self.setCentralWidget(main)
         layout = QtWidgets.QHBoxLayout(main)
@@ -34,7 +33,7 @@ class SmartPlanner(QtWidgets.QMainWindow):
         self.right_stack = QtWidgets.QStackedWidget()
         layout.addWidget(self.right_stack, 3)
 
-        # === Редактор ===
+        #Редактор
         editor = QtWidgets.QWidget()
         vbox = QtWidgets.QVBoxLayout(editor)
         switch_btn = QtWidgets.QPushButton("Переключить на диаграмму")

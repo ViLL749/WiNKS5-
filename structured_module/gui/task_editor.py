@@ -51,21 +51,50 @@ class TaskEditorWidget(QtWidgets.QWidget):
         grid.setColumnStretch(1, 1)
         vbox.addLayout(grid)
 
-        # Dates
-        dbox = QtWidgets.QHBoxLayout()
+        # # Dates
+        # dbox = QtWidgets.QHBoxLayout()
+        #
+        # self.start_date = QtWidgets.QDateEdit(calendarPopup=True)
+        # self.end_date = QtWidgets.QDateEdit(calendarPopup=True)
+        # self.start_date.setDisplayFormat("dd.MM.yyyy")
+        # self.end_date.setDisplayFormat("dd.MM.yyyy")
+        #
+        # dbox.addWidget(QtWidgets.QLabel("Начало:"))
+        # dbox.addWidget(self.start_date)
+        # dbox.addSpacing(10)
+        # dbox.addWidget(QtWidgets.QLabel("Окончание:"))
+        # dbox.addWidget(self.end_date)
+        #
+        # vbox.addLayout(dbox)
 
+        # Даты
         self.start_date = QtWidgets.QDateEdit(calendarPopup=True)
         self.end_date = QtWidgets.QDateEdit(calendarPopup=True)
         self.start_date.setDisplayFormat("dd.MM.yyyy")
         self.end_date.setDisplayFormat("dd.MM.yyyy")
 
-        dbox.addWidget(QtWidgets.QLabel("Начало:"))
-        dbox.addWidget(self.start_date)
-        dbox.addSpacing(10)
-        dbox.addWidget(QtWidgets.QLabel("Окончание:"))
-        dbox.addWidget(self.end_date)
+        date_layout = QtWidgets.QHBoxLayout()
+        date_layout.setSpacing(20)  # расстояние между парами
 
-        vbox.addLayout(dbox)
+        # Начало
+        start_layout = QtWidgets.QHBoxLayout()
+        start_label = QtWidgets.QLabel("Начало:")
+        start_label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        start_layout.addWidget(start_label)
+        start_layout.addWidget(self.start_date)
+        start_layout.setSpacing(6)  # расстояние между меткой и полем
+        date_layout.addLayout(start_layout)
+
+        # Окончание
+        end_layout = QtWidgets.QHBoxLayout()
+        end_label = QtWidgets.QLabel("Окончание:")
+        end_label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        end_layout.addWidget(end_label)
+        end_layout.addWidget(self.end_date)
+        end_layout.setSpacing(6)
+        date_layout.addLayout(end_layout)
+
+        vbox.addLayout(date_layout)
 
         row = QtWidgets.QHBoxLayout()
         self.btnSave = QtWidgets.QPushButton("Сохранить")
