@@ -145,7 +145,7 @@ def draw_timeline(scene, tasks, step_days, viewport_w, ui_scale=1.0, dark_theme=
     axis_y = y + 15 * ui_scale
     scene.addLine(axis_start_x, axis_y, axis_end_x, axis_y, QtGui.QPen(axis_color, 2))
 
-    tick_font = QtGui.QFont("Segoe UI", int(10 * ui_scale))
+    tick_font = QtGui.QFont("Arial", int(10 * ui_scale))
     fm = QtGui.QFontMetrics(tick_font)
     cur = axis_start
     while cur < axis_end:

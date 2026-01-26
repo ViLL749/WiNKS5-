@@ -22,6 +22,17 @@ from PyQt5 import QtWidgets, QtCore
 
 from PyQt5 import QtWidgets, QtCore
 
+import sys
+import os
+
+def resource_path(relative_path):
+    """ Получает путь к ресурсу, работает и для обычного запуска, и для PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+DB_PATH = os.path.join(os.path.expanduser("~"), "smart_planner.db")
+CONFIG_PATH = os.path.join(os.path.expanduser("~"), "smart_planner_config.json")
+
 
 class SettingsDialog(QtWidgets.QDialog):
     scaleChanged = QtCore.pyqtSignal(float)
@@ -72,8 +83,11 @@ class SettingsDialog(QtWidgets.QDialog):
         self.radio_dark.toggled.connect(lambda checked: self.on_theme_change("dark") if checked else None)
         self.radio_light.toggled.connect(lambda checked: self.on_theme_change("light") if checked else None)
 
+
         # Кнопки
         btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+        close_btn = btn_box.button(QtWidgets.QDialogButtonBox.Close)
+        close_btn.setText("Закрыть")
         btn_box.rejected.connect(self.reject)
         layout.addWidget(btn_box)
 
@@ -99,7 +113,7 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
         self.zoom_index = 2
 
         # Подключение к БД
-        self.conn = task_manager.connect("smart_planner.db")
+        self.conn = task_manager.connect(DB_PATH)
         task_manager.ensure_schema(self.conn)
 
         # Основной layout
@@ -175,8 +189,8 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
         self.scene = QtWidgets.QGraphicsScene()
         self.view = QtWidgets.QGraphicsView(self.scene)
         self.view.setRenderHint(QtGui.QPainter.Antialiasing)
-        self.view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         tl_layout.addWidget(self.view)
         self.right_stack.addWidget(timeline_widget)
 
@@ -198,8 +212,8 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
         self.right_stack.setCurrentIndex(0)
 
     def load_config(self):
-        if os.path.exists(self.CONFIG_FILE):
-            with open(self.CONFIG_FILE, "r", encoding="utf-8") as f:
+        if os.path.exists(CONFIG_PATH):
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 cfg = json.load(f)
         else:
             cfg = {"ui_scale": 1.0, "theme": "dark"}
@@ -208,7 +222,7 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
 
     def save_config(self):
         cfg = {"ui_scale": self.current_scale, "theme": self.current_theme}
-        with open(self.CONFIG_FILE, "w", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(cfg, f, ensure_ascii=False, indent=4)
 
     def _apply_styles(self, dark=None):
@@ -260,7 +274,7 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
             scroll_bg = "#1b1b2f"  # фон скроллбара
             scroll_handle = "#5c5cd6"  # бегунок скроллбара
             border_color = "#9999aa"
-            arrow_svg = "calendar-range-dark.svg"
+            arrow_svg = resource_path("calendar-range-dark.svg").replace("\\", "/")
         else:
             bg = "#f7f9fc"
             fg = "#2c3e50"
@@ -275,7 +289,7 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
             scroll_bg = "#f0f3f7"
             scroll_handle = "#85c1e9"
             border_color = "#bbbbcc"
-            arrow_svg = "calendar-range-light.svg"
+            arrow_svg = resource_path("calendar-range-light.svg").replace("\\", "/")
 
         font_size = int(10 * self.current_scale)
 
@@ -446,13 +460,32 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
         self.editor.clear_form()
         self.right_stack.setCurrentIndex(0)
 
+    # def _on_delete_task(self, task_id):
+    #     if not task_id:
+    #         return
+    #     if QtWidgets.QMessageBox.question(
+    #             self, "Удалить", "Удалить задачу?",
+    #             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+    #     ) == QtWidgets.QMessageBox.Yes:
+    #         task_manager.delete_task(self.conn, task_id)
+    #         self.editor.clear_form()
+    #         self._reload_list()
+
     def _on_delete_task(self, task_id):
         if not task_id:
             return
-        if QtWidgets.QMessageBox.question(
-                self, "Удалить", "Удалить задачу?",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
-        ) == QtWidgets.QMessageBox.Yes:
+
+        msg = QtWidgets.QMessageBox(self)
+        msg.setWindowTitle("Удалить")
+        msg.setText("Удалить задачу?")
+        msg.setIcon(QtWidgets.QMessageBox.Question)
+
+        btn_yes = msg.addButton("Да", QtWidgets.QMessageBox.YesRole)
+        btn_no = msg.addButton("Нет", QtWidgets.QMessageBox.NoRole)
+
+        msg.exec_()
+
+        if msg.clickedButton() == btn_yes:
             task_manager.delete_task(self.conn, task_id)
             self.editor.clear_form()
             self._reload_list()
