@@ -2,7 +2,7 @@ import sys
 import sqlite3
 from PyQt5 import QtWidgets, QtCore, QtGui
 
-DB_FILE = "smart_planner.db"
+DB_FILE = "structured_module/smart_planner.db"
 
 
 class SmartPlanner(QtWidgets.QMainWindow):

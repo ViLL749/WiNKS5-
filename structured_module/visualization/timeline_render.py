@@ -74,10 +74,27 @@ def draw_timeline(scene, tasks, step_days, viewport_w, ui_scale=1.0, dark_theme=
 
     if not valid_tasks:
         # Если нет задач, выводим сообщение
-        txt = scene.addText("Нет задач с корректными датами")
+        msg = "Нет задач с корректными датами"
+        txt = scene.addText(msg)
         txt.setDefaultTextColor(text_color_main)
-        txt.setPos(20, 20)
-        scene.setSceneRect(0, 0, 600, 200)
+
+        font = QtGui.QFont()
+        base_font_size = 16
+        font.setPointSize(int(base_font_size * ui_scale))
+        txt.setFont(font)
+
+        txt_rect = txt.boundingRect()
+        txt_w = txt_rect.width()
+        txt_h = txt_rect.height()
+
+        scene_h = 300 * ui_scale
+        scene_w = max(viewport_w, txt_w + 40)
+
+        scene.setSceneRect(0, 0, scene_w, scene_h)
+
+        pos_x = (scene_w - txt_w) / 2
+        pos_y = (scene_h - txt_h) / 2
+        txt.setPos(pos_x, pos_y)
         return
 
     # Сортировка задач по актуальности

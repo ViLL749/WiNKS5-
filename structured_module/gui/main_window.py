@@ -25,10 +25,14 @@ from PyQt5 import QtWidgets, QtCore
 import sys
 import os
 
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
 def resource_path(relative_path):
     """ Получает путь к ресурсу, работает и для обычного запуска, и для PyInstaller """
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
+
 
 DB_PATH = os.path.join(os.path.expanduser("~"), "smart_planner.db")
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), "smart_planner_config.json")
@@ -82,7 +86,6 @@ class SettingsDialog(QtWidgets.QDialog):
         # Сигналы для мгновенной смены темы
         self.radio_dark.toggled.connect(lambda checked: self.on_theme_change("dark") if checked else None)
         self.radio_light.toggled.connect(lambda checked: self.on_theme_change("light") if checked else None)
-
 
         # Кнопки
         btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
@@ -292,6 +295,7 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
             arrow_svg = resource_path("calendar-range-light.svg").replace("\\", "/")
 
         font_size = int(10 * self.current_scale)
+        icon_size = int(14 * self.current_scale)
 
         style = f"""
         QMainWindow, QWidget {{
@@ -326,15 +330,15 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
         QDateEdit::drop-down {{
             subcontrol-origin: padding;
             subcontrol-position: top right;
-            width:20px;
+            width: {icon_size + 8}px;
             border-left:1px solid {border_color};
             border-radius:0 6px 6px 0;
             background:{btn_bg};
         }}
         QDateEdit::down-arrow {{
             image: url({arrow_svg});
-            width:12px;
-            height:12px;
+            width:{icon_size}px;
+            height:{icon_size}px;
         }}
         QPushButton {{
             background:{btn_bg};
@@ -385,7 +389,7 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
         width: 0; height: 0;
         border: none;
     }}
-    
+
     /* Горизонтальная — аналогично */
     QScrollBar:horizontal {{
         background: {scroll_bg};
@@ -409,7 +413,7 @@ class SmartPlannerMainWindow(QtWidgets.QMainWindow):
         image: none;
         border: none;
     }}
-    
+
     QLabel#titleLabel {{
     font-weight: bold;
     font-size: {int(14 * self.current_scale)}pt;
