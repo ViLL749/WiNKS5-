@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import operator
 
+
 # Вспомогательные функции
 def align_to_step(qdate: QtCore.QDate, step_days: int, ceil=False):
     """
@@ -11,6 +12,7 @@ def align_to_step(qdate: QtCore.QDate, step_days: int, ceil=False):
     days = epoch.daysTo(qdate)
     k = (days + (step_days - 1)) // step_days if ceil else days // step_days
     return epoch.addDays(k * step_days)
+
 
 def ensure_min_span(start_d, end_d, step_days, px_per_day,
                     min_divisions, viewport_width, left_pad, right_pad):
@@ -29,17 +31,11 @@ def ensure_min_span(start_d, end_d, step_days, px_per_day,
     axis_end = align_to_step(axis_start.addDays(span), step_days, ceil=True)
     return axis_start, axis_end
 
+
 # Основная функция
 def draw_timeline(scene, tasks, step_days, viewport_w, ui_scale=1.0, dark_theme=True):
     """
     Рисует таймлайн задач в QGraphicsScene.
-    Параметры:
-        scene       - QGraphicsScene
-        tasks       - список задач с полями start_date, end_date, title, комментарии
-        step_days   - шаг по дням для оси времени
-        viewport_w  - ширина видимой области
-        ui_scale    - масштаб интерфейса
-        dark_theme  - True для тёмной темы, False для светлой
     """
     parsed = []
     today = QtCore.QDate.currentDate()
@@ -52,6 +48,7 @@ def draw_timeline(scene, tasks, step_days, viewport_w, ui_scale=1.0, dark_theme=
         axis_color = QtGui.QColor("#585b70")
         tick_color = QtGui.QColor("#89b4fa")
         tick_text_color = QtGui.QColor("#bac2de")
+        grid_color = QtGui.QColor(128, 128, 128, 40)
     else:
         rect_brush_color = QtGui.QColor(135, 206, 250)
         rect_pen_color = QtGui.QColor("#3399ff")
@@ -59,6 +56,7 @@ def draw_timeline(scene, tasks, step_days, viewport_w, ui_scale=1.0, dark_theme=
         axis_color = QtGui.QColor("#a0a0a0")
         tick_color = QtGui.QColor("#3399ff")
         tick_text_color = QtGui.QColor("#2a2a2a")
+        grid_color = QtGui.QColor(150, 150, 150, 60)
 
     # Фильтрация задач
     valid_tasks = []
@@ -73,31 +71,17 @@ def draw_timeline(scene, tasks, step_days, viewport_w, ui_scale=1.0, dark_theme=
         valid_tasks.append(t)
 
     if not valid_tasks:
-        # Если нет задач, выводим сообщение
         msg = "Нет задач с корректными датами"
         txt = scene.addText(msg)
         txt.setDefaultTextColor(text_color_main)
-
         font = QtGui.QFont()
-        base_font_size = 16
-        font.setPointSize(int(base_font_size * ui_scale))
+        font.setPointSize(int(16 * ui_scale))
         txt.setFont(font)
-
-        txt_rect = txt.boundingRect()
-        txt_w = txt_rect.width()
-        txt_h = txt_rect.height()
-
-        scene_h = 300 * ui_scale
-        scene_w = max(viewport_w, txt_w + 40)
-
-        scene.setSceneRect(0, 0, scene_w, scene_h)
-
-        pos_x = (scene_w - txt_w) / 2
-        pos_y = (scene_h - txt_h) / 2
-        txt.setPos(pos_x, pos_y)
+        scene.setSceneRect(0, 0, viewport_w, 300 * ui_scale)
+        txt.setPos((viewport_w - txt.boundingRect().width()) / 2, 100 * ui_scale)
         return
 
-    # Сортировка задач по актуальности
+    # Сортировка (показываем топ-5 актуальных)
     ongoing_tasks = [t for t in valid_tasks if t["_ed"] >= today]
     past_tasks = [t for t in valid_tasks if t["_ed"] < today]
     ongoing_tasks.sort(key=operator.itemgetter("_ed"))
@@ -120,72 +104,76 @@ def draw_timeline(scene, tasks, step_days, viewport_w, ui_scale=1.0, dark_theme=
     # Настройки размеров
     px_per_day = 3.6 * (30 / step_days) * ui_scale
     left_pad, right_pad = 40 * ui_scale, 40 * ui_scale
-    y, bar_h, spacing = 20 * ui_scale, 35 * ui_scale, 60 * ui_scale
+    y_start, bar_h, spacing = 20 * ui_scale, 35 * ui_scale, 60 * ui_scale
+    current_y = y_start
 
-    min_date, max_date = min(p[2] for p in parsed), max(p[3] for p in parsed).addDays(1)
+    min_date = min(p[2] for p in parsed)
+    max_date = max(p[3] for p in parsed).addDays(1)
+
     axis_start = align_to_step(min_date, step_days)
     axis_end_raw = align_to_step(max_date, step_days, ceil=True)
     axis_start, axis_end = ensure_min_span(axis_start, axis_end_raw, step_days, px_per_day,
-                                          min_divisions=10, viewport_width=viewport_w,
-                                          left_pad=left_pad, right_pad=right_pad)
-    total_days = axis_start.daysTo(axis_end)
-    axis_start_x, axis_end_x = left_pad, left_pad + total_days * px_per_day
+                                           min_divisions=10, viewport_width=viewport_w,
+                                           left_pad=left_pad, right_pad=right_pad)
 
-    # Бары задач
+    total_days = axis_start.daysTo(axis_end)
+    axis_start_x = left_pad
+    axis_end_x = left_pad + total_days * px_per_day
+
+    # 1. РИСУЕМ БАРЫ ЗАДАЧ
     for tid, title, sd, ed, tip in parsed:
         x = axis_start_x + axis_start.daysTo(sd) * px_per_day
-        w = max(15, sd.daysTo(ed.addDays(1)) * px_per_day)
+        w = max(15 * ui_scale, sd.daysTo(ed.addDays(1)) * px_per_day)
 
-        # Прямоугольник задачи
-        rect = scene.addRect(QtCore.QRectF(x, y, w, bar_h),
+        rect = scene.addRect(QtCore.QRectF(x, current_y, w, bar_h),
                              QtGui.QPen(rect_pen_color, 2),
                              QtGui.QBrush(rect_brush_color))
         rect.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
         rect.setData(0, tid)
-
-        # Подробности при наведении
         rect.setToolTip(tip)
 
-        # Заголовок задачи
         txt = scene.addText(title)
         f = txt.font()
         f.setPointSize(int(9 * ui_scale))
         f.setBold(True)
         txt.setFont(f)
-        txt_rect = txt.boundingRect()
         txt.setDefaultTextColor(text_color_main)
-        txt.setPos(x + 8 * ui_scale, y + (bar_h - txt_rect.height()) / 2)
+        txt.setPos(x + 8 * ui_scale, current_y + (bar_h - txt.boundingRect().height()) / 2)
 
-        y += spacing
+        current_y += spacing
 
-    # Ось времени
-    axis_y = y + 15 * ui_scale
+    # 2. ОСЬ ВРЕМЕНИ И СЕТКА
+    axis_y = current_y + 15 * ui_scale
+    grid_pen = QtGui.QPen(grid_color, 1, QtCore.Qt.DotLine)
     scene.addLine(axis_start_x, axis_y, axis_end_x, axis_y, QtGui.QPen(axis_color, 2))
 
     tick_font = QtGui.QFont("Arial", int(10 * ui_scale))
     fm = QtGui.QFontMetrics(tick_font)
+
     cur = axis_start
-    while cur < axis_end:
+    while cur <= axis_end:
         x = axis_start_x + axis_start.daysTo(cur) * px_per_day
+
+        # Вертикальная сетка
+        scene.addLine(x, 0, x, axis_y, grid_pen)
+
+        # Деление на оси
         scene.addLine(x, axis_y - 5 * ui_scale, x, axis_y + 5 * ui_scale, QtGui.QPen(tick_color))
-        label = scene.addText(cur.toString("dd.MM"))
+
+        # Текст даты
+        date_str = cur.toString("dd.MM")
+        label = scene.addText(date_str)
         label.setFont(tick_font)
         label.setDefaultTextColor(tick_text_color)
-        half = fm.horizontalAdvance("00.00") / 2
-        label.setPos(x - half, axis_y + 8 * ui_scale)
+        tw = fm.horizontalAdvance(date_str)
+        label.setPos(x - tw / 2, axis_y + 8 * ui_scale)
+
+        # Линия "Сегодня"
+        if cur == today:
+            today_pen = QtGui.QPen(QtGui.QColor("#ff5555"), 2)
+            scene.addLine(x, 0, x, axis_y + 25 * ui_scale, today_pen)
+
         cur = cur.addDays(step_days)
 
-    # Последнее деление
-    last_txt = axis_end.addDays(-1).toString("dd.MM")
-    last_x = axis_end_x
-    scene.addLine(last_x, axis_y - 5 * ui_scale, last_x, axis_y + 5 * ui_scale, QtGui.QPen(tick_color))
-    lab2 = scene.addText(last_txt)
-    lab2.setFont(tick_font)
-    lab2.setDefaultTextColor(tick_text_color)
-    last_half = fm.horizontalAdvance(last_txt) / 2
-    lab2.setPos(last_x - last_half, axis_y + 8 * ui_scale)
-
-    # Размеры сцены
-    tail_pad = last_half + 20 * ui_scale
-    scene_w = max(axis_end_x + tail_pad + right_pad, viewport_w + 1)
-    scene.setSceneRect(0, 0, scene_w, axis_y + 60 * ui_scale)
+    # Установка границ сцены
+    scene.setSceneRect(0, 0, max(axis_end_x + right_pad, viewport_w), axis_y + 60 * ui_scale)
